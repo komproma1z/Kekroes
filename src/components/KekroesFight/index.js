@@ -11,6 +11,23 @@ import Typography from '@material-ui/core/Typography';
 import ListItem from '@material-ui/core/ListItem';
 import Divider from '@material-ui/core/Divider';
 
+const winrateCache = [[], []];
+const getFromCache = (hero1, hero2) => {
+    for (let i = 0; i < winrateCache[0].length; i++) {
+        if (winrateCache[0][i].includes(hero1.name) && winrateCache[0][i].includes(hero2.name)) {
+            if (winrateCache[0][i][0] === hero1.name) {
+                return {1: winrateCache[1][i][1], 2: winrateCache[1][i][2]}
+            } else {
+                return {2: winrateCache[1][i][1], 1: winrateCache[1][i][2]}
+            }
+        }
+    }
+}
+const setToCache = (hero1, hero2, value) => {
+    winrateCache[0].push([hero1.name, hero2.name]);
+    winrateCache[1].push(value);
+}
+const PREDICTION_PRECISION = 10000;
 class KekroesFight extends React.PureComponent {
     state = {
         hero1: null,
@@ -18,6 +35,8 @@ class KekroesFight extends React.PureComponent {
         fightResult: '',
         fightLog: [],
     }
+
+    winrateCache = [];
 
     showHeroStats = hero => {
         return (<span>{hero.stats}</span>);
@@ -35,8 +54,7 @@ class KekroesFight extends React.PureComponent {
         }
     }
 
-    FIGHT = (hero1, hero2) => {
-
+    _fightCalculate = (hero1, hero2) => {
         const hero1Copy = {...hero1};
         const hero2Copy = {...hero2};
 
@@ -46,15 +64,15 @@ class KekroesFight extends React.PureComponent {
             fightLog.push(this.round(hero1Copy, hero2Copy));   
         }
 
-        if (hero1Copy.hp <= 0 && hero2Copy.hp <= 0) {
-            this.setState({fightResult: 'The guys went draw!', fightLog});
-            return;
-        }
+        return [hero1Copy.hp, hero2Copy.hp, fightLog]
+    }
+    FIGHT = (hero1, hero2) => {
 
-        if (hero2Copy.hp <= 0) {
-            this.setState({fightResult: `The winner is: ${hero1.name}, HP left: ${hero1Copy.hp}!`, fightLog});
-        } else if (hero1Copy.hp <= 0) {
-            this.setState({fightResult: `The winner is: ${hero2.name}, HP left: ${hero2Copy.hp}!`, fightLog});
+        const [hero1hp, hero2hp, fightLog] = this._fightCalculate(hero1, hero2);
+        if (hero1hp <= 0) {
+            this.setState({fightResult: `The winner is: ${hero1.name}, HP left: ${hero1.hp}!`, fightLog});
+        } else if (hero2hp <= 0) {
+            this.setState({fightResult: `The winner is: ${hero2.name}, HP left: ${hero2.hp}!`, fightLog});
         }
     }
 
@@ -87,13 +105,39 @@ class KekroesFight extends React.PureComponent {
 
         return roundLog;
     }
+    _roundAttack = (hero1, hero2) => {
+        
+    }
+
+    predict = (hero1, hero2) => {
+        if (!getFromCache(hero1, hero2)) {
+            const fights = [];
+            for (let i = 0; i < PREDICTION_PRECISION; i++) {
+                fights.push(this._fightCalculate(hero1, hero2));
+            }
+            const wins = fights.reduce((acc, next) => {
+                if (next[0] > 0 && next[1] <= 0) {
+                    acc[1] += 1;
+                } else if (next[1] > 0 && next[0] <= 0) {
+                    acc[2] += 1;
+                }
+                return acc;
+            }, {1: 0, 2: 0});
+            setToCache(hero1, hero2, wins);
+        }
+        
+        return getFromCache(hero1, hero2);
+    }
 
     render() {
 
         const { heroes } = this.props;
 
         const {hero1, hero2, fightResult, fightLog} = this.state;
-
+        let wins;
+        if (hero1 && hero2) {
+            wins = this.predict(hero1, hero2);
+        }
         return (
             <Styles.Wrapper>
                 <Styles.KekroesList>
@@ -105,7 +149,7 @@ class KekroesFight extends React.PureComponent {
                     <Styles.KekroSlot>
                         <CardContent>
                             <Typography color="textSecondary" gutterBottom>
-                            Champion 1
+                            Champion 1 {wins ? `${(wins[1] / PREDICTION_PRECISION * 100).toFixed(2)}%` : null}
                             </Typography>
                             <Typography variant="h5" component="h2">
                             {hero1 && hero1.name}
@@ -128,7 +172,7 @@ class KekroesFight extends React.PureComponent {
                     <Styles.KekroSlot>
                         <CardContent>
                             <Typography color="textSecondary" gutterBottom>
-                            Champion 2
+                            Champion 2 {wins ? `${(wins[2] / PREDICTION_PRECISION * 100).toFixed(2)}%` : null}
                             </Typography>
                             <Typography variant="h5" component="h2">
                             {hero2 && hero2.name}

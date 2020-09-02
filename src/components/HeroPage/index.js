@@ -1,9 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux'
 import { styled } from "styletron-react";
-
+import racesData from '../../data/races.json';
 class HeroesPage extends React.PureComponent {
     render() {
+        console.log(racesData);
         const { selectedHero } = this.props;
         if (!selectedHero) {
             return null;
