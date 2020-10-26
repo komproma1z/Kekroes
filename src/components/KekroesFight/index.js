@@ -70,9 +70,9 @@ class KekroesFight extends React.PureComponent {
 
         const [hero1hp, hero2hp, fightLog] = this._fightCalculate(hero1, hero2);
         if (hero1hp <= 0) {
-            this.setState({fightResult: `The winner is: ${hero1.name}, HP left: ${hero1.hp}!`, fightLog});
-        } else if (hero2hp <= 0) {
             this.setState({fightResult: `The winner is: ${hero2.name}, HP left: ${hero2.hp}!`, fightLog});
+        } else if (hero2hp <= 0) {
+            this.setState({fightResult: `The winner is: ${hero1.name}, HP left: ${hero1.hp}!`, fightLog});
         }
     }
 
