@@ -66,13 +66,14 @@ class KekroesFight extends React.PureComponent {
 
         return [hero1Copy.hp, hero2Copy.hp, fightLog]
     }
+
     FIGHT = (hero1, hero2) => {
 
         const [hero1hp, hero2hp, fightLog] = this._fightCalculate(hero1, hero2);
         if (hero1hp <= 0) {
-            this.setState({fightResult: `The winner is: ${hero2.name}, HP left: ${hero2.hp}!`, fightLog});
+            this.setState({fightResult: `The winner is: ${hero2.name}!`, fightLog});
         } else if (hero2hp <= 0) {
-            this.setState({fightResult: `The winner is: ${hero1.name}, HP left: ${hero1.hp}!`, fightLog});
+            this.setState({fightResult: `The winner is: ${hero1.name}!`, fightLog});
         }
     }
 
@@ -100,13 +101,13 @@ class KekroesFight extends React.PureComponent {
         hero1.hp = hero1.hp - hero1ChangeByWeapon - hero1ChangeBySpell;
         hero2.hp = hero2.hp - hero2ChangeByWeapon - hero2ChangeBySpell;
 
+        if (hero1.hp < 0) hero1.hp = 0;
+        if (hero2.hp < 0) hero2.hp = 0;
+
         roundLog.push(`${hero1.name} took ${hero1ChangeByWeapon} damage by weapon and ${hero1ChangeBySpell} by spell and had ${hero1.hp} HP left ---`);
         roundLog.push(`${hero2.name} took ${hero2ChangeByWeapon} damage by weapon and ${hero2ChangeBySpell} by spell and had ${hero2.hp} HP left`);
 
         return roundLog;
-    }
-    _roundAttack = (hero1, hero2) => {
-        
     }
 
     predict = (hero1, hero2) => {
